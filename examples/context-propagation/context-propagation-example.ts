@@ -1,9 +1,11 @@
 /**
  * Example: Context Propagation in Deep Agents
- * 
+ *
  * This example demonstrates how context and configuration propagate
  * from parent agents to subagents through the task tool.
  */
+
+/* eslint-disable no-console */
 
 import "dotenv/config";
 import { z } from "zod";
@@ -38,7 +40,7 @@ const contextAwareTool = tool(
     schema: z.object({
       query: z.string().describe("The query to process"),
     }),
-  }
+  },
 );
 
 // ============================================================================
@@ -75,7 +77,9 @@ const stateAwareTool = tool(
     console.log(`User ID from state: ${currentState.userId}`);
     console.log(`Session locale: ${currentState.sessionData?.locale}`);
     console.log(`Preference depth: ${currentState.preferences?.depth}`);
-    console.log(`Shared cache keys: ${Object.keys(currentState.sharedCache || {}).join(", ")}`);
+    console.log(
+      `Shared cache keys: ${Object.keys(currentState.sharedCache || {}).join(", ")}`,
+    );
     console.log(`Action: ${action}`);
 
     // Can update shared cache
@@ -90,7 +94,7 @@ const stateAwareTool = tool(
     schema: z.object({
       action: z.string().describe("The action to perform"),
     }),
-  }
+  },
 );
 
 // ============================================================================
@@ -99,8 +103,7 @@ const stateAwareTool = tool(
 
 const researchSubagent: SubAgent = {
   name: "research-agent",
-  description:
-    "Researcher that has access to user context and preferences",
+  description: "Researcher that has access to user context and preferences",
   systemPrompt: `You are a researcher with access to user context.
   
 When researching, consider:
@@ -114,8 +117,7 @@ Use the context_aware_tool to perform context-aware operations.`,
 
 const analysisSubagent: SubAgent = {
   name: "analysis-agent",
-  description:
-    "Analyzer that can read and update shared state",
+  description: "Analyzer that can read and update shared state",
   systemPrompt: `You are an analyzer with access to shared state.
   
 You can:
@@ -178,14 +180,14 @@ async function demonstrateContextPropagation() {
         trace_id: "trace-001",
       },
       recursionLimit: 50,
-    }
+    },
   );
 
   console.log("\n--- Result 1 ---");
   console.log("Messages:", result1.messages.length);
   console.log(
     "Last message:",
-    result1.messages[result1.messages.length - 1]?.content?.slice(0, 200)
+    result1.messages[result1.messages.length - 1]?.content?.slice(0, 200),
   );
 
   // Example 2: Using custom state
@@ -210,7 +212,7 @@ async function demonstrateContextPropagation() {
         trace_id: "trace-002",
       },
       recursionLimit: 50,
-    }
+    },
   );
 
   console.log("\n--- Result 2 ---");
@@ -218,7 +220,7 @@ async function demonstrateContextPropagation() {
   console.log("Shared cache keys:", Object.keys(result2.sharedCache || {}));
   console.log(
     "Last message:",
-    result2.messages[result2.messages.length - 1]?.content?.slice(0, 200)
+    result2.messages[result2.messages.length - 1]?.content?.slice(0, 200),
   );
 
   // Example 3: Multiple parallel subagent calls with shared context
@@ -244,7 +246,7 @@ async function demonstrateContextPropagation() {
         trace_id: "trace-003",
       },
       recursionLimit: 50,
-    }
+    },
   );
 
   console.log("\n--- Result 3 ---");

@@ -22,6 +22,7 @@ node dist/examples/context-propagation/context-propagation-example.js
 ```
 
 Or with tsx:
+
 ```bash
 npx tsx examples/context-propagation/context-propagation-example.ts
 ```
@@ -103,7 +104,7 @@ const agent = createDeepAgent({
       name: "research-agent",
       description: "Researcher with user context",
       tools: [contextAwareTool],
-    }
+    },
   ],
 });
 
@@ -117,8 +118,8 @@ await agent.invoke(
     configurable: {
       session_id: "session-456",
       trace_id: "trace-789",
-    }
-  }
+    },
+  },
 );
 ```
 

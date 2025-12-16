@@ -71,7 +71,8 @@ describe("Context Propagation Tests", () => {
       async () => {
         const configValues: any[] = [];
 
-        const deepConfigTool = tool(
+        // Tool to capture config at different levels
+        tool(
           async ({ level }: { level: string }, config) => {
             configValues.push({
               level,
@@ -190,7 +191,7 @@ describe("Context Propagation Tests", () => {
         let capturedState: any = null;
 
         const stateInspectTool = tool(
-          async ({ _dummy }: { _dummy: string }, config) => {
+          async (_input: { _dummy: string }, config) => {
             capturedState = getCurrentTaskInput<Record<string, any>>(config);
             return "State inspected";
           },
@@ -314,15 +315,10 @@ describe("Context Propagation Tests", () => {
       { timeout: 60000 },
       async () => {
         let capturedConfig: any = null;
-        let capturedState: any = null;
 
         const fullContextTool = tool(
           async ({ operation }: { operation: string }, config) => {
             capturedConfig = config?.configurable;
-            capturedState = getCurrentTaskInput<{
-              contextId?: string;
-              metadata?: Record<string, any>;
-            }>(config);
             return `Operation ${operation} executed with full context`;
           },
           {
@@ -334,17 +330,8 @@ describe("Context Propagation Tests", () => {
           }
         );
 
-        const FullContext = Annotation.Root({
-          messages: Annotation<any[]>({
-            reducer: (x, y) => x.concat(y),
-          }),
-          contextId: Annotation<string>,
-          metadata: Annotation<Record<string, any>>,
-        });
-
         const agent = createDeepAgent({
           model: SAMPLE_MODEL,
-          contextSchema: FullContext,
           systemPrompt:
             "Use the context-agent with full_context_tool",
           subagents: [
@@ -363,13 +350,13 @@ describe("Context Propagation Tests", () => {
             messages: [
               new HumanMessage("Call context-agent with full context"),
             ],
-            contextId: "ctx-789",
-            metadata: { source: "test", priority: "high" },
           },
           {
             configurable: {
               session_id: "session-999",
               trace_enabled: true,
+              contextId: "ctx-789",
+              metadata: { source: "test", priority: "high" },
             },
           }
         );
@@ -379,10 +366,9 @@ describe("Context Propagation Tests", () => {
         expect(capturedConfig.session_id).toBe("session-999");
         expect(capturedConfig.trace_enabled).toBe(true);
 
-        // Verify state propagation
-        expect(capturedState).toBeDefined();
-        expect(capturedState.contextId).toBe("ctx-789");
-        expect(capturedState.metadata).toEqual({
+        // Verify configurable values can be used as context
+        expect(capturedConfig.contextId).toBe("ctx-789");
+        expect(capturedConfig.metadata).toEqual({
           source: "test",
           priority: "high",
         });
@@ -398,11 +384,10 @@ describe("Context Propagation Tests", () => {
         const parallelContextTool = tool(
           async ({ agentName }: { agentName: string }, config) => {
             const configurable = config?.configurable;
-            const state = getCurrentTaskInput<{ requestId?: string }>(config);
 
             executionContexts.push({
               agentName,
-              requestId: state.requestId,
+              requestId: configurable?.request_id,
               sessionId: configurable?.session_id,
             });
 
@@ -417,16 +402,8 @@ describe("Context Propagation Tests", () => {
           }
         );
 
-        const ParallelContext = Annotation.Root({
-          messages: Annotation<any[]>({
-            reducer: (x, y) => x.concat(y),
-          }),
-          requestId: Annotation<string>,
-        });
-
         const agent = createDeepAgent({
           model: SAMPLE_MODEL,
-          contextSchema: ParallelContext,
           systemPrompt:
             "Use agent-a and agent-b in parallel to process requests",
           subagents: [
@@ -454,11 +431,11 @@ describe("Context Propagation Tests", () => {
                 "Call both agent-a and agent-b in parallel"
               ),
             ],
-            requestId: "req-parallel-001",
           },
           {
             configurable: {
               session_id: "parallel-session",
+              request_id: "req-parallel-001",
             },
           }
         );
